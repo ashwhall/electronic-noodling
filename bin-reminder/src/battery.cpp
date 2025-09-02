@@ -3,55 +3,86 @@
 #include "lights.h"
 #include "state.h"
 
-void setup_battery() {}
+const float R1 = 220000.0; // Ohms
+const float R2 = 100000.0; // Ohms
+
+// Approximate voltage-to-percentage table (Li-ion single cell)
+const float voltage_lookup[] = {4.20, 4.10, 3.95, 3.85, 3.75, 3.50, 3.30};
+const float percentage_lookup[] = {1, 0.9, 0.75, 0.5, 0.25, 0.1, 0};
+
+void setup_battery()
+{
+    pinMode(BAT_READ_PIN, INPUT);
+    pinMode(BAT_CHECK_PIN, INPUT);
+}
+
+float voltage_to_percent(float v)
+{
+    if (v >= voltage_lookup[0])
+        return 1;
+    if (v <= voltage_lookup[6])
+        return 0;
+
+    for (int i = 0; i < 6; i++)
+    {
+        if (v <= voltage_lookup[i] && v > voltage_lookup[i + 1])
+        {
+            // Linear interpolation
+            float slope = (percentage_lookup[i + 1] - percentage_lookup[i]) / (voltage_lookup[i + 1] - voltage_lookup[i]);
+            return (float)percentage_lookup[i] + slope * (v - voltage_lookup[i]);
+        }
+    }
+    return 0;
+}
 
 float read_battery_level()
 {
+    pinMode(BAT_CHECK_PIN, OUTPUT);
+    digitalWrite(BAT_CHECK_PIN, HIGH);
+    delay(10); // Let the pin stabilise
+    // Read the battery level
+
     // TODO: Actual battery level reading
-    int value = analogRead(BAT_PIN);
-    return (float)value / 1023.0f;
+    int raw = analogRead(BAT_READ_PIN);
+
+    pinMode(BAT_CHECK_PIN, INPUT);
+    // Convert ADC reading back to battery voltage
+    float vRef = 3.3; // ADC reference (Vcc)
+    float vSense = (raw / 1023.0) * vRef;
+    float vBatt = vSense * (R1 + R2) / R2;
+
+    float pct = (float)voltage_to_percent(vBatt) / 100.0f;
+    return pct;
 }
 
 /**
- * Convert a percentage (0.0 to 1.0) to a decile (1 to 10).
- * Ceils the value so that any non-zero percentage is at least 1.
- * Clamps to 10 if over 100%.
+ * Convert a percentage (0.0 to 1.0) to a decile (1 to 10),
+ * where 1 means 0-10%, 2 means 11-20%, ..., 10 means 91-100%
  */
 int to_decile(float pct)
 {
     int out = (int)(ceil(pct * 10.0f));
-    if (out < 1)
-    {
-        return 1;
-    }
-    else if (out > 10)
-    {
-        return 10;
-    }
-    return out;
+    return clamp(out, 1, 10);
 }
 
-void battery_step()
+void display_battery_level()
 {
-    if (mode == Mode::DISPLAYING_BATTERY)
-    {
-        float level = read_battery_level();
-        int decile_level = to_decile(level);
-        Serial.print("Battery level: ");
-        Serial.print((float)level);
-        Serial.flush();
 
-        if (decile_level < 1)
-        {
-            decile_level = 1;
-        }
-        else if (decile_level > 10)
-        {
-            decile_level = 10;
-        }
-        all_off();
-        delay(200);
-        flash_active(decile_level);
-        next_mode();
+    float level = read_battery_level();
+    int decile_level = to_decile(level);
+    Serial.print("Battery level: ");
+    Serial.print((float)level);
+    Serial.flush();
+
+    if (decile_level < 1)
+    {
+        decile_level = 1;
     }
+    else if (decile_level > 10)
+    {
+        decile_level = 10;
+    }
+    turn_off_all_lights();
+    delay(200);
+    flash_active(decile_level);
 }

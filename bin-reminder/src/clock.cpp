@@ -91,7 +91,7 @@ void alarm_interrupt()
     alarm_triggered = true;
 }
 
-void clock_step()
+void check_clock_interrupts()
 {
     if (alarm_triggered)
     {

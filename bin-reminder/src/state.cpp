@@ -40,3 +40,40 @@ Colour toggle_active_colour()
 
     return active_colour;
 }
+
+void print_state()
+{
+    Serial.print("Mode: ");
+    switch (mode)
+    {
+    case Mode::STARTUP:
+        Serial.print("STARTUP");
+        break;
+    case Mode::IDLE:
+        Serial.print("IDLE");
+        break;
+    case Mode::DISPLAYING_BATTERY:
+        Serial.print("DISPLAYING_BATTERY");
+        break;
+    case Mode::ALARM_TRIGGERED:
+        Serial.print("ALARM_TRIGGERED");
+        break;
+    default:
+        Serial.print("UNKNOWN");
+        break;
+    }
+    Serial.print(", Active Colour: ");
+    switch (active_colour)
+    {
+    case Colour::RED:
+        Serial.println("RED");
+        break;
+    case Colour::YELLOW:
+        Serial.println("YELLOW");
+        break;
+    default:
+        Serial.println("UNKNOWN");
+        break;
+    }
+    Serial.flush();
+}

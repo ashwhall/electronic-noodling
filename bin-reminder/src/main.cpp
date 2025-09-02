@@ -9,7 +9,7 @@
 #include "battery.h"
 #include "state.h"
 
-// TODO: Add my own resister instead of internal pullup
+// TODO: Add my own resister instead of internal pullup - 100kΩ to 470kΩ
 // TODO: Remove built-in LED
 
 void on_button_press()
@@ -38,16 +38,6 @@ void on_alarm2()
   announce_colour_change();
 }
 
-void begin_startup_lights_seq()
-{
-  flash(Colour::RED, 10, 25);
-}
-
-void finish_startup_lights_seq()
-{
-  flash(Colour::YELLOW, 10, 25);
-}
-
 void setup()
 {
   Serial.begin(9600);
@@ -57,7 +47,7 @@ void setup()
 
   setup_lights();
 
-  begin_startup_lights_seq();
+  begin_startup_lights();
 
   setup_button(&on_button_press, &on_button_hold);
   setup_battery();
@@ -69,31 +59,39 @@ void setup()
 
 void loop()
 {
-  button_step();
+  check_button_interrupts();
+  check_clock_interrupts();
 
-  if (mode == Mode::DISPLAYING_BATTERY)
+  bool repeat_loop = false;
+  do
   {
-    Serial.println("DISPLAYING_BATTERY");
-  }
-  if (mode == Mode::ALARM_TRIGGERED)
-  {
-    Serial.println("ALARM_TRIGGERED");
-  }
-  if (mode == Mode::IDLE)
-  {
-    Serial.println("IDLE");
-  }
-  Serial.flush();
+    repeat_loop = false;
 
-  if (mode == Mode::STARTUP)
-  {
-    finish_startup_lights_seq();
-    mode = Mode::DISPLAYING_BATTERY;
-  }
+    print_state();
 
-  clock_step();
-  lights_step();
-  battery_step();
+    switch (mode)
+    {
+    case Mode::STARTUP:
+      end_startup_lights();
+      mode = Mode::DISPLAYING_BATTERY;
+      repeat_loop = true;
+      break;
+    case Mode::DISPLAYING_BATTERY:
+      display_battery_level();
+      mode = Mode::IDLE;
+      break;
+    case Mode::ALARM_TRIGGERED:
+      turn_on_alarm_lights();
+      break;
+    case Mode::IDLE:
+      turn_off_all_lights();
+      break;
+    default:
+      mode = Mode::IDLE;
+      repeat_loop = true;
+      break;
+    }
+  } while (!repeat_loop);
 
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 }

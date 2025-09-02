@@ -23,10 +23,10 @@ void setup_lights()
     pinMode(pin_from_colour(Colour::RED), OUTPUT);
     pinMode(pin_from_colour(Colour::YELLOW), OUTPUT);
 
-    all_off();
+    turn_off_all_lights();
 }
 
-void all_off()
+void turn_off_all_lights()
 {
     turn_off(Colour::RED);
     turn_off(Colour::YELLOW);
@@ -68,24 +68,27 @@ void flash_active(uint8_t times, unsigned long delay_ms)
     flash(active_colour, times, delay_ms);
 }
 
-void lights_step()
+void turn_on_alarm_lights()
 {
-    if (mode == Mode::ALARM_TRIGGERED)
-    {
-        all_off();
-        turn_on(active_colour);
-    }
-    else
-    {
-        all_off();
-    }
+    turn_off_all_lights();
+    turn_on(active_colour);
 }
 
 void announce_colour_change()
 {
     // Flash the new colour a few times to indicate the change
-    all_off();
+    turn_off_all_lights();
     flash_active(1, 250);
 
     flash_active(5, 50);
+}
+
+void begin_startup_lights()
+{
+    flash(Colour::RED, 10, 25);
+}
+
+void end_startup_lights()
+{
+    flash(Colour::YELLOW, 10, 25);
 }

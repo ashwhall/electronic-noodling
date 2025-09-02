@@ -4,8 +4,7 @@
 #include "util_types.h"
 
 void setup_lights();
-uint8_t pin_from_colour(Colour light);
-void all_off();
+void turn_off_all_lights();
 void turn_on(Colour light);
 void turn_off(Colour light);
 void flash(Colour light, uint8_t times);
@@ -13,8 +12,11 @@ void flash(Colour light, uint8_t times, unsigned long delay_ms);
 void flash_active(uint8_t times);
 void flash_active(uint8_t times, unsigned long delay_ms);
 
+void begin_startup_lights();
+void end_startup_lights();
+
 void announce_colour_change();
 
-void lights_step();
+void turn_on_alarm_lights();
 
 #endif // LIGHTS_H

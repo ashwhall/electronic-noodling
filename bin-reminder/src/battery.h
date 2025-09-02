@@ -4,7 +4,6 @@
 #include "util_types.h"
 
 void setup_battery();
-void battery_step();
-float read_battery_level();
+void display_battery_level();
 
 #endif // BATTERY_H

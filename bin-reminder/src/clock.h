@@ -8,7 +8,7 @@ void setup_clock(Callback on_alarm1, Callback on_alarm2);
 bool set_alarm1();
 bool set_alarm2();
 void alarm_interrupt();
-void clock_step();
+void check_clock_interrupts();
 String format_date(DateTime date);
 String get_current_time_string();
 

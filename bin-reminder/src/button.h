@@ -5,6 +5,6 @@
 
 void setup_button(Callback on_press, Callback on_hold);
 void button_interrupt();
-void button_step();
+void check_button_interrupts();
 
 #endif // BUTTON_H

@@ -12,8 +12,6 @@ bool button_pressed = false;
 const unsigned long DEBOUNCE_THRESH_MS = 100;
 const unsigned long HOLD_THRESH_MS = 500;
 
-// TODO: Minimal sized types
-
 void setup_button(Callback on_press, Callback on_hold)
 {
     on_press_callback = on_press;
@@ -29,7 +27,7 @@ void button_interrupt()
     button_pressed = true;
 }
 
-void button_step()
+void check_button_interrupts()
 {
     unsigned long curr_time = millis();
 
