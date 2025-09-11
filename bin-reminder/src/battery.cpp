@@ -3,8 +3,10 @@
 #include "lights.h"
 #include "state.h"
 
-const float R1 = 220000.0; // Ohms
-const float R2 = 100000.0; // Ohms
+// const float R1 = 680000.0; // Ohms
+// const float R2 = 470000.0; // Ohms
+const float R1 = 704000.0; // Ohms (measured)
+const float R2 = 472000.0; // Ohms (measured)
 
 // Approximate voltage-to-percentage table (Li-ion single cell)
 const float voltage_lookup[] = {4.20, 4.10, 3.95, 3.85, 3.75, 3.50, 3.30};
