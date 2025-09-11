@@ -2,6 +2,8 @@
 #define UTIL_TYPES_H
 #include <Arduino.h>
 
+#define DEBUG
+
 #define clamp(x, lower, upper) (min(max((x), (lower)), (upper)))
 
 typedef void (*Callback)();

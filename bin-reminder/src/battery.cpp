@@ -8,52 +8,123 @@
 const float R1 = 704000.0; // Ohms (measured)
 const float R2 = 472000.0; // Ohms (measured)
 
+const float DIVIDER = (R1 + R2) / R2;
+
 // Approximate voltage-to-percentage table (Li-ion single cell)
-const float voltage_lookup[] = {4.20, 4.10, 3.95, 3.85, 3.75, 3.50, 3.30};
-const float percentage_lookup[] = {1, 0.9, 0.75, 0.5, 0.25, 0.1, 0};
+// https://intofpv.com/t-lipo-voltage-quick-chart
+const uint8_t V_LOOKUP_SIZE = 21;
+const float voltage_lookup[V_LOOKUP_SIZE][2] = {
+    {1.00, 4.20},
+    {0.95, 4.15},
+    {0.90, 4.11},
+    {0.85, 4.08},
+    {0.80, 4.02},
+    {0.75, 3.98},
+    {0.70, 3.95},
+    {0.65, 3.91},
+    {0.60, 3.87},
+    {0.55, 3.85},
+    {0.50, 3.84},
+    {0.45, 3.82},
+    {0.40, 3.80},
+    {0.35, 3.79},
+    {0.30, 3.77},
+    {0.25, 3.75},
+    {0.20, 3.73},
+    {0.15, 3.71},
+    {0.10, 3.69},
+    {0.05, 3.61},
+    {0.00, 3.27}};
 
 void setup_battery()
 {
     pinMode(BAT_READ_PIN, INPUT);
-    pinMode(BAT_CHECK_PIN, INPUT);
 }
 
 float voltage_to_percent(float v)
 {
-    if (v >= voltage_lookup[0])
+    if (v >= voltage_lookup[0][1])
         return 1;
-    if (v <= voltage_lookup[6])
+    if (v <= voltage_lookup[V_LOOKUP_SIZE - 1][1])
         return 0;
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < V_LOOKUP_SIZE; i++)
     {
-        if (v <= voltage_lookup[i] && v > voltage_lookup[i + 1])
+        float p1 = voltage_lookup[i][0];
+        float p2 = voltage_lookup[i + 1][0];
+        float v1 = voltage_lookup[i][1];
+        float v2 = voltage_lookup[i + 1][1];
+        if (v <= v1 && v > v2)
         {
+#if defined(DEBUG)
+            Serial.print("v: ");
+            Serial.print(v);
+            Serial.print(" between ");
+            Serial.print(v1);
+            Serial.print(" and ");
+            Serial.print(v2);
+            Serial.print(" => ");
+            Serial.print(p1);
+            Serial.print(" and ");
+            Serial.println(p2);
+            Serial.flush();
+#endif
             // Linear interpolation
-            float slope = (percentage_lookup[i + 1] - percentage_lookup[i]) / (voltage_lookup[i + 1] - voltage_lookup[i]);
-            return (float)percentage_lookup[i] + slope * (v - voltage_lookup[i]);
+            float slope = (p2 - p1) / (v2 - v1);
+            return (float)p1 + slope * (v - v1);
         }
     }
     return 0;
 }
 
+float read_vcc()
+{
+    ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+    delay(2);
+    ADCSRA |= _BV(ADSC);
+    while (bit_is_set(ADCSRA, ADSC))
+        ;
+    float result = 1125300L / ADC; // Back-calculate VCC in mV
+    return result / 1000.0 + 0.05; // Correction factor
+}
+
 float read_battery_level()
 {
-    pinMode(BAT_CHECK_PIN, OUTPUT);
-    digitalWrite(BAT_CHECK_PIN, HIGH);
-    delay(10); // Let the pin stabilise
     // Read the battery level
-
-    // TODO: Actual battery level reading
     int raw = analogRead(BAT_READ_PIN);
 
-    pinMode(BAT_CHECK_PIN, INPUT);
-    // Convert ADC reading back to battery voltage
-    float vRef = 3.3; // ADC reference (Vcc)
-    float vSense = (raw / 1023.0) * vRef;
-    float vBatt = vSense * (R1 + R2) / R2;
+#if defined(DEBUG)
+    float vcc = read_vcc();
+    Serial.print("Vcc: ");
+    Serial.println(vcc);
+    Serial.flush();
+#endif
 
-    float pct = (float)voltage_to_percent(vBatt) / 100.0f;
+#if defined(DEBUG)
+    Serial.print("Raw battery reading: ");
+    Serial.println(raw);
+    Serial.flush();
+#endif
+
+    // Convert ADC reading back to battery voltage
+    float vRef = vcc; // ADC reference (Vcc)
+    float vSense = (raw / 1024.0) * vRef;
+
+#if defined(DEBUG)
+    Serial.print("vSense: ");
+    Serial.println(vSense);
+    Serial.flush();
+#endif
+
+    float vBatt = vSense * DIVIDER;
+
+#if defined(DEBUG)
+    Serial.print("vBatt: ");
+    Serial.println(vBatt);
+    Serial.flush();
+#endif
+
+    float pct = (float)voltage_to_percent(vBatt);
     return pct;
 }
 
@@ -72,18 +143,13 @@ void display_battery_level()
 
     float level = read_battery_level();
     int decile_level = to_decile(level);
+
+#if defined(DEBUG)
     Serial.print("Battery level: ");
     Serial.print((float)level);
     Serial.flush();
+#endif
 
-    if (decile_level < 1)
-    {
-        decile_level = 1;
-    }
-    else if (decile_level > 10)
-    {
-        decile_level = 10;
-    }
     turn_off_all_lights();
     delay(200);
     flash_active(decile_level);
