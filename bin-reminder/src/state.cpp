@@ -43,6 +43,7 @@ Colour toggle_active_colour()
 
 void print_state()
 {
+#ifdef DEBUG
     Serial.print("Mode: ");
     switch (mode)
     {
@@ -76,4 +77,5 @@ void print_state()
         break;
     }
     Serial.flush();
+#endif
 }

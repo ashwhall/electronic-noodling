@@ -10,7 +10,6 @@
 #include "state.h"
 
 // TODO: Add my own resister instead of internal pullup - 100kΩ to 470kΩ
-// TODO: Remove built-in LED
 
 void on_button_press()
 {
@@ -40,12 +39,15 @@ void on_alarm2()
 
 void setup()
 {
+#ifdef DEBUG
   Serial.begin(9600);
   while (!Serial)
-  {
-  };
+    ;
+#endif
 
   setup_lights();
+
+  delay(100);
 
   begin_startup_lights();
 
@@ -73,6 +75,9 @@ void loop()
     {
     case Mode::STARTUP:
       end_startup_lights();
+      delay(500);
+      display_time_by_flashing();
+
       mode = Mode::DISPLAYING_BATTERY;
       repeat_loop = true;
       break;
@@ -91,7 +96,7 @@ void loop()
       repeat_loop = true;
       break;
     }
-  } while (!repeat_loop);
+  } while (repeat_loop);
 
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 }

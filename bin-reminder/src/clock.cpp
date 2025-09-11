@@ -3,6 +3,7 @@
 #include "util_types.h"
 #include "RTClib.h"
 #include "pins.h"
+#include "lights.h"
 
 Callback on_alarm1_callback = nullptr;
 Callback on_alarm2_callback = nullptr;
@@ -31,15 +32,20 @@ void setup_clock(Callback on_alarm1, Callback on_alarm2)
 
     if (!rtc.begin())
     {
+#ifdef DEBUG
         Serial.println("Couldn't find RTC");
         Serial.flush();
+#endif
         while (1)
             delay(10);
     }
 
     if (AUTO_SET_CLOCK)
     {
+#ifdef DEBUG
         Serial.println("Setting RTC time...");
+        Serial.flush();
+#endif
         rtc.adjust(DateTime(DateTime(F(__DATE__), F(__TIME__))));
     }
 
@@ -48,7 +54,10 @@ void setup_clock(Callback on_alarm1, Callback on_alarm2)
     // we don't need the 32K Pin, so disable it
     rtc.disable32K();
 
+#ifdef DEBUG
     Serial.println("System booting at " + get_current_time_string());
+    Serial.flush();
+#endif
 
     // set alarm 1, 2 flag to false (so alarm 1, 2 didn't happen so far)
     // if not done, this easily leads to problems, as both register aren't reset on reboot/recompile
@@ -57,7 +66,9 @@ void setup_clock(Callback on_alarm1, Callback on_alarm2)
 
     // stop oscillating signals at SQW Pin, otherwise setAlarm1 will fail
     rtc.writeSqwPinMode(DS3231_OFF);
+#ifdef DEBUG
     Serial.flush();
+#endif
 
     set_alarm1();
     set_alarm2();
@@ -99,8 +110,10 @@ void check_clock_interrupts()
 
         if (rtc.alarmFired(1))
         {
+#ifdef DEBUG
             Serial.println("Alarm 1 triggered at " + get_current_time_string());
             Serial.flush();
+#endif
 
             rtc.clearAlarm(1);
 
@@ -114,8 +127,10 @@ void check_clock_interrupts()
         }
         if (rtc.alarmFired(2))
         {
+#ifdef DEBUG
             Serial.println("Alarm 2 triggered at " + get_current_time_string());
             Serial.flush();
+#endif
 
             rtc.clearAlarm(2);
 
@@ -133,37 +148,71 @@ void check_clock_interrupts()
 bool set_alarm1()
 {
     // TODO: Remove next two lines - trigger every 15 seconds for testing
-    DateTime ALARM1_TIME = rtc.now() + TimeSpan(0, 0, 0, 15);
-    const Ds3231Alarm1Mode ALARM1_MODE = DS3231_A1_Second;
+    // DateTime ALARM1_TIME = rtc.now() + TimeSpan(0, 0, 0, 15);
+    // const Ds3231Alarm1Mode ALARM1_MODE = DS3231_A1_Second;
 
+#ifdef DEBUG
     Serial.println("Setting alarm 1 for " + format_date(ALARM1_TIME));
+    Serial.flush();
+#endif
     bool result = rtc.setAlarm1(ALARM1_TIME, ALARM1_MODE);
+#ifdef DEBUG
     if (result)
     {
         Serial.println("Alarm 1 set successfully");
+        Serial.flush();
     }
     else
     {
         Serial.println("Error setting alarm 1");
     }
+#endif
     return result;
 }
 
 bool set_alarm2()
 {
     // TODO: Remove next two lines - trigger on the minute for testing
-    DateTime ALARM2_TIME = rtc.now() + TimeSpan(0, 0, 0, 10);
-    const Ds3231Alarm2Mode ALARM2_MODE = DS3231_A2_PerMinute;
+    // DateTime ALARM2_TIME = rtc.now() + TimeSpan(0, 0, 0, 10);
+    // const Ds3231Alarm2Mode ALARM2_MODE = DS3231_A2_PerMinute;
 
+#ifdef DEBUG
     Serial.println("Setting alarm 2 for " + format_date(ALARM2_TIME));
+    Serial.flush();
+#endif
     bool result = rtc.setAlarm2(ALARM2_TIME, ALARM2_MODE);
+
+#ifdef DEBUG
     if (result)
     {
-        Serial.println("Alarm 1 set successfully");
+        Serial.println("Alarm 2 set successfully");
     }
     else
     {
         Serial.println("Error setting alarm 1");
     }
+    Serial.flush();
+#endif
+
     return result;
+}
+
+void display_time_by_flashing()
+{
+    DateTime now = rtc.now();
+    int hour = now.hour();
+    int minute = now.minute();
+
+    // Flash the hour
+    turn_off_all_lights();
+    flash(Colour::RED, hour);
+    delay(1000);
+    // Flash the minute in two halves
+    int minute_tens = minute / 10;
+    int minute_ones = minute % 10;
+    flash(Colour::YELLOW, minute_tens);
+    delay(500);
+    flash(Colour::YELLOW, minute_ones);
+    delay(1000);
+    turn_off_all_lights();
 }

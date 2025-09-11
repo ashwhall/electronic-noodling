@@ -6,10 +6,9 @@ const uint8_t CLOCK_INTERRUPT_PIN = 2;
 
 const uint8_t BUT_PIN = 3;
 
-const uint8_t RED_PIN = 7;
-const uint8_t YEL_PIN = 6;
+const uint8_t RED_PIN = 6;
+const uint8_t YEL_PIN = 7;
 
 const uint8_t BAT_READ_PIN = A0;
-const uint8_t BAT_CHECK_PIN = 5;
 
 #endif // PINS_H

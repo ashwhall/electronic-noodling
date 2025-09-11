@@ -9,6 +9,7 @@ bool set_alarm1();
 bool set_alarm2();
 void alarm_interrupt();
 void check_clock_interrupts();
+void display_time_by_flashing();
 String format_date(DateTime date);
 String get_current_time_string();
 
