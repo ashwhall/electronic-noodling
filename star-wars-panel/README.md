@@ -1,4 +1,4 @@
-# Star Wars Panel Button Sequences
+# Star Wars-esque Wall Panel
 
 A silly little mock wall panel I designed and 3d-printed for a sci-fi themed murder mystery party.
 
