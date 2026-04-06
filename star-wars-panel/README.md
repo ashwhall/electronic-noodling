@@ -1,10 +1,14 @@
 # Star Wars Panel Button Sequences
 
-A silly little mock wall panel I designed a 3d-printed for a sci-fi themed murder mystery party.
+A silly little mock wall panel I designed and 3d-printed for a sci-fi themed murder mystery party.
 
 **99% vibe-coded, because why bother for such a low-stakes project?**
 
 It wasn't intended to be shared, but might as well put it online. Message me if you want the original Fusion 360 files or any other photos.
+
+![Panel front](./front.png) ![Panel back](./back.png)
+
+![Demo](./demo.gif)
 
 ## How to Use
 
