@@ -6,9 +6,7 @@ A silly little mock wall panel I designed and 3d-printed for a sci-fi themed mur
 
 It wasn't intended to be shared, but might as well put it online. Message me if you want the original Fusion 360 files or any other photos.
 
-![Panel front](./front.png) ![Panel back](./back.png)
-
-![Demo](./demo.gif)
+![Panel front](./front.jpg) ![Panel back](./back.png)
 
 ## How to Use
 
